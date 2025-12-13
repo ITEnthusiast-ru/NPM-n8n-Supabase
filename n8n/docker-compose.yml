@@ -1,0 +1,40 @@
+version: '3.8'
+
+services:
+  n8n:
+    image: n8nio/n8n:latest
+    container_name: n8n
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:5678:5678"  # Только локальный доступ, прокси через NPM
+    environment:
+      - N8N_PROTOCOL=https
+      - N8N_HOST=n8n.en8en.ru  # Исправлен домен (было en8e.ru)
+      - N8N_PORT=5678
+      - N8N_WEBHOOK_URL=https://n8n.en8en.ru  # Исправлен домен
+      - WEBHOOK_URL=https://n8n.en8en.ru  # Исправлен домен
+      - NODE_ENV=production
+      - GENERIC_TIMEZONE=Asia/Tomsk
+      - N8N_METRICS=true
+      - N8N_METRICS_INCLUDE_DEFAULT_METRICS=true
+      # Безопасность
+      - N8N_SECURE_COOKIE=true
+      - EXECUTIONS_DATA_PRUNE=true
+      - EXECUTIONS_DATA_MAX_AGE=168  # Хранить данные 7 дней
+      # База данных
+      - DB_TYPE=sqlite
+      - DB_SQLITE_DATABASE=/home/node/.n8n/database.sqlite
+    volumes:
+      - n8n_data:/home/node/.n8n
+      - ./local_files:/files  # Для локальных файлов
+    networks:
+      - npm_default
+      - supabase_default
+networks:
+  npm_default:
+    external: true  # Используем внешнюю сеть NPM
+  supabase_default:  # Добавьте эту сеть
+    external: true   # Указываем, что сеть внешняя
+volumes:
+  n8n_data:
+    name: n8n_data
