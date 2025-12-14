@@ -9,12 +9,12 @@ services:
       - "127.0.0.1:5678:5678"  # Только локальный доступ, прокси через NPM
     environment:
       - N8N_PROTOCOL=https
-      - N8N_HOST=${N8N_HOST:-n8n.yourdomain.com}  # Ваш домен
+      - N8N_HOST=n8n.yourdomain.ru  # Исправлен домен (было en8e.ru)
       - N8N_PORT=5678
-      - N8N_WEBHOOK_URL=https://${N8N_HOST:-n8n.yourdomain.com}
-      - WEBHOOK_URL=https://${N8N_HOST:-n8n.yourdomain.com}
+      - N8N_WEBHOOK_URL=https://n8n.yourdomain.ru  # Исправлен домен
+      - WEBHOOK_URL=https://n8n.yourdomain.ru  # Исправлен домен
       - NODE_ENV=production
-      - GENERIC_TIMEZONE=${TIMEZONE:-Europe/Moscow}
+      - GENERIC_TIMEZONE=Asia/Tomsk
       - N8N_METRICS=true
       - N8N_METRICS_INCLUDE_DEFAULT_METRICS=true
       # Безопасность
