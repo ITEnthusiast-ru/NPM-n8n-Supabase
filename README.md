@@ -1,6 +1,5 @@
-# NPM+n8n+Supabase 
 # 🚀 NPM + n8n + Supabase Stack
-
+![Title image n8n + supabase + nginx proxy manager](./src/img/logo.png)
 Полнофункциональный стек для развертывания интегрированной платформы автоматизации с: 
 - **Nginx Proxy Manager (NPM)** — обратный прокси с управлением SSL-сертификатами
 - **Supabase** — open-source БД + Auth + Storage (PostgreSQL + Kong + Studio)
@@ -55,14 +54,16 @@ docker network create supabase_default || true
 
 ### Шаг 2: Настройка переменных окружения и доменов
 
-#### Для n8n (`n8n/docker-compose. yml`):
+Любым удобным для вас способом отредактируйте файл docker-compose.yml
+#### Для n8n (`n8n/docker-compose.yml`):
 ```yaml
 # Замените yourdomain.ru на ваш реальный домен
 environment:
   - N8N_HOST=n8n.yourdomain.ru       # Основной домен для доступа
   - N8N_WEBHOOK_URL=https://n8n.yourdomain.ru  # URL для вебхуков
+  - WEBHOOK_URL=https://n8n.yourdomain.ru  
 ```
-
+так же стоит поступить с файлом переменых окружения .env в папке supabase-project
 #### Для Supabase (`supabase-project/.env`):
 Это **критически важный файл** — здесь хранятся все секреты: 
 
@@ -77,10 +78,6 @@ SERVICE_ROLE_KEY=eyJ...  # Получите/сгенерируйте после 
 DASHBOARD_USERNAME=supabase
 DASHBOARD_PASSWORD=this_password_is_insecure_and_should_be_updated
 
-# API Gateway
-KONG_HTTP_PORT=8000
-KONG_HTTPS_PORT=8443
-
 # Генерация безопасных значений: 
 # JWT_SECRET:  openssl rand -base64 32
 # POSTGRES_PASSWORD: openssl rand -base64 16
@@ -89,14 +86,15 @@ KONG_HTTPS_PORT=8443
 **Где взять ANON_KEY и SERVICE_ROLE_KEY? **
 
 Они генерируются автоматически при первом запуске Supabase.  После запуска контейнеров: 
-1. Откройте Supabase Studio:  http://localhost:3000
-2. Перейдите в Settings → API
-3. Скопируйте значения в `.env` файл
+1. Откройте документацию supabase  https://supabase.com/docs/guides/self-hosting/docker
+2. Пролистайте до раздела Generate and configure API keys
+3. Замените значения JWT_SECRET ANON_KEY SERVICE_ROLE_KEY на соответстующие зачения в `.env` файле
 4. Перезапустите контейнер:  `docker-compose restart`
 
 ### Шаг 3: Настройка DNS
 
 Добавьте A-записи у вашего DNS-провайдера (или отредактируйте `/etc/hosts` для локального тестирования):
+![Пример A записей у DNS провайдера Reg.ru](./src/img/dns-records.png)
 
 ```
 npm. yourdomain.ru          → IP_вашего_сервера
@@ -160,8 +158,9 @@ docker logs n8n --tail 50
 Откройте **http://ваш-ip:81** в браузере.
 
 **Стандартные учетные данные:**
-- Email: `admin@example.com`
-- Password: `changeme`
+  - Ведите ваше имя администратора
+  - Введите ваш email  администратора
+  - Введите пароль
 
 ⚠️ **Сразу смените пароль!** (Settings → Users → Change Password)
 
@@ -193,14 +192,8 @@ docker logs n8n --tail 50
 ```bash
 # Все контейнеры должны быть RUNNING
 docker ps --format "table {{.Names}}\t{{.Status}}\t{{.Networks}}"
-
-# Пример вывода:
-# n8n              Up 2 minutes ago   npm_default,supabase_default
-# supabase-kong    Up 3 minutes ago   supabase_default
-# supabase-db      Up 3 minutes ago   supabase_default
-# app              Up 5 minutes ago   npm_default
 ```
-
+![example output](./src/img/comand%20output.png)
 Откройте в браузере: 
 - **NPM Admin:** https://npm.yourdomain.ru
 - **Supabase Studio:** https://supabase.yourdomain.ru
@@ -242,75 +235,7 @@ NPM-n8n-Supabase/
 
 ```
 
----
 
-## 🔗 Взаимодействие сервисов
-
-### n8n → Supabase
-
-n8n может подключаться к Supabase несколькими способами:
-
-#### Способ 1: REST API (рекомендуется)
-```bash
-# Используйте Public URL Supabase
-https://supabase.yourdomain.ru
-
-# Аутентификация:
-Authorization: Bearer [ANON_KEY или SERVICE_ROLE_KEY]
-
-# Пример в n8n:
-# HTTP Request node
-# Method: POST
-# URL: https://supabase.yourdomain.ru/rest/v1/profiles
-# Headers:  
-#   - Authorization: Bearer [ANON_KEY]
-#   - Content-Type: application/json
-```
-
-#### Способ 2: Прямое подключение к PostgreSQL
-⚠️ **Не рекомендуется для production** (требует открытия портов)
-
-```bash
-# Если нужно прямое подключение в n8n:
-# Host: supabase-db (имя контейнера внутри Docker сети supabase_default)
-# Port: 5432
-# Database:  postgres
-# Username: postgres
-# Password: [POSTGRES_PASSWORD из .env]
-```
-
-#### Способ 3: Webhooks из Supabase
-Supabase может отправлять события в n8n через PostgreSQL trigger: 
-```sql
--- Пример создания webhook при изменении таблицы
--- (Используется pg_net расширение в Supabase)
-```
-
-### Сетевая архитектура
-
-```
-┌─────────────────────────────────────────────────────┐
-│             npm_default сеть                        │
-│  ┌──────────┐         ┌──────────┐                  │
-│  │    app   │◄───────►│   n8n    │                  │
-│  │  (NPM)   │ (порт81 & 5678)    │                  │
-│  └──────────┘         └──────────┘                  │
-└─────────────────────────────────────────────────────┘
-                            ▲
-                            │ (подключена к обеим сетям)
-                            ▼
-┌─────────────────────────────────────────────────────┐
-│          supabase_default сеть                      │
-│  ┌──────────┐  ┌──────────┐  ┌──────────┐           │
-│  │   kong   │◄─┤   db     │  │ realtime │           │
-│  │ (gateway)│  │(postgres)│  │          │           │
-│  └──────────┘  └──────────┘  └──────────┘           │
-└─────────────────────────────────────────────────────┘
-
-n8n находится в обеих сетях и может общаться с: 
-- NPM через npm_default
-- Supabase через supabase_default
-```
 
 ---
 
@@ -346,7 +271,7 @@ n8n находится в обеих сетях и может общаться �
 sudo ss -tulpn | grep -E ': 5432|:8000|:3000|:5678' || echo "✓ Все внутренние порты закрыты"
 
 # Проверить Docker-сети (n8n должна быть в обеих сетях)
-docker inspect n8n | jq '.NetworkSettings.Networks'
+docker inspect n8n | jq '.[0].NetworkSettings.Networks'
 
 # Проверить логи на ошибки безопасности
 docker logs supabase-db | grep -i "error\|fail" || echo "✓ Нет ошибок"
@@ -360,7 +285,7 @@ docker logs supabase-db | grep -i "error\|fail" || echo "✓ Нет ошибок
 
 ```bash
 # Быстрый статус всех контейнеров
-docker ps --format "table {{.Names}}\t{{.Status}}\t{{. Ports}}"
+docker ps --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}"
 
 # Детальная информация о сети
 docker network inspect npm_default
@@ -377,7 +302,7 @@ docker system df
 
 ```bash
 # Логи NPM
-docker logs app -f --tail 50
+docker logs npm-app-1 -f --tail 50
 
 # Логи Supabase (выбранный сервис)
 docker logs supabase-db -f --tail 100
@@ -387,10 +312,6 @@ docker logs supabase-studio -f --tail 50
 # Логи n8n
 docker logs n8n -f --tail 100
 
-# Все логи в хронологическом порядке
-docker-compose -f npm/docker-compose.yml logs -f
-docker-compose -f supabase-project/docker-compose.yml logs -f
-docker-compose -f n8n/docker-compose.yml logs -f
 ```
 
 ### Обновление образов
