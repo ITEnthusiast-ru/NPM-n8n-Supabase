@@ -130,11 +130,13 @@ docker logs app  # Container name из docker-compose.yml
 cd supabase-project
 docker-compose up -d
 cd .. 
-
+```
+```bash
 # Проверка готовности БД (это займет 30-60 секунд!)
 docker logs supabase-db --tail 20
 # Ищем сообщение: "database system is ready to accept connections"
-
+```
+```bash
 # Проверка Kong API Gateway
 docker logs supabase-kong --tail 10
 # Ожидаем, что Kong запустился без ошибок
@@ -194,6 +196,7 @@ docker logs n8n --tail 50
 docker ps --format "table {{.Names}}\t{{.Status}}\t{{.Networks}}"
 ```
 ![example output](./src/img/comand%20output.png)
+
 Откройте в браузере: 
 - **NPM Admin:** https://npm.yourdomain.ru
 - **Supabase Studio:** https://supabase.yourdomain.ru
@@ -269,10 +272,15 @@ NPM-n8n-Supabase/
 ```bash
 # Убедиться, что внутренние порты закрыты (пример для Linux)
 sudo ss -tulpn | grep -E ': 5432|:8000|:3000|:5678' || echo "✓ Все внутренние порты закрыты"
+```
 
+```bash
 # Проверить Docker-сети (n8n должна быть в обеих сетях)
 docker inspect n8n | jq '.[0].NetworkSettings.Networks'
+```
 
+
+```bash
 # Проверить логи на ошибки безопасности
 docker logs supabase-db | grep -i "error\|fail" || echo "✓ Нет ошибок"
 ```
