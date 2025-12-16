@@ -192,6 +192,23 @@ docker logs n8n --tail 50
 - Forward Port: `8000`
 - SSL Certificate: Create a new SSL Certificate (Let's Encrypt)
 - Force SSL: ✓
+  
+Еще нужно кое что добавить в каждой конфигурации нажмите на значок шестиренки
+
+  ![hint image](./src/img/npm-settings-tmp.png)
+
+  и обавьте в Custom Nginx Configuration:
+
+```
+client_max_body_size 100M;
+proxy_read_timeout 300s;
+
+proxy_set_header Upgrade $http_upgrade;
+proxy_set_header Connection "upgrade";
+proxy_set_header X-Real-IP $remote_addr;
+proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+proxy_set_header X-Forwarded-Proto $scheme;
+```
 
 ### Шаг 6: Проверка доступности сервисов
 
