@@ -42,6 +42,10 @@
 ## 🚀 Быстрый старт
 
 ### Шаг 1: Клонирование и подготовка
+#### На вашем сервере должны быть установлены:
+1. Git ```apt-get install git```
+2. Docker [инструкция по установке](https://docs.docker.com/engine/install/ubuntu/#install-using-the-repository)
+3. OS сервера должна быть Ubuntu
 
 ```bash
 git clone https://github.com/ITEnthusiast-ru/NPM-n8n-Supabase.git
@@ -86,7 +90,7 @@ DASHBOARD_PASSWORD=this_password_is_insecure_and_should_be_updated
 **Где взять ANON_KEY и SERVICE_ROLE_KEY? **
 
 Они генерируются автоматически при первом запуске Supabase.  После запуска контейнеров: 
-1. Откройте документацию supabase  https://supabase.com/docs/guides/self-hosting/docker
+1. Откройте [документацию supabase](https://supabase.com/docs/guides/self-hosting/docker)
 2. Пролистайте до раздела Generate and configure API keys
 3. Замените значения JWT_SECRET ANON_KEY SERVICE_ROLE_KEY на соответстующие зачения в `.env` файле
 4. Перезапустите контейнер:  `docker-compose restart`
